@@ -1,0 +1,357 @@
+ROSTemplateFormatVersion: '2015-09-01'
+Description:
+  en: waline deploy ecs
+  zh-cn: ecs部署waline
+# 参数配置
+Parameters:
+  PayType:
+    Type: String
+    Label:
+      en: ECS Instance Charge Type
+      zh-cn: 付费类型
+    Default: PostPaid
+    AllowedValues:
+      - PostPaid
+      - PrePaid
+    AssociationProperty: ChargeType
+    AssociationPropertyMetadata:
+      LocaleKey: InstanceChargeType
+  PayPeriodUnit:
+    Type: String
+    Label:
+      en: Pay Period Unit
+      zh-cn: 购买资源时长周期
+    Default: Month
+    AllowedValues:
+      - Month
+      - Year
+    AssociationProperty: PayPeriodUnit
+    AssociationPropertyMetadata:
+      Visible:
+        Condition:
+          Fn::Not:
+            Fn::Equals:
+              - ${PayType}
+              - PostPaid
+  PayPeriod:
+    Type: Number
+    Description:
+      en: When the resource purchase duration is Month, the value of Period ranges from 1 to 9, 12, 24, 36, 48, or 60. <br><b><font color='red'> When ECS instance types are PrePaid valid </b></font>
+      zh-cn: 当购买资源时长为Month时，Period取值：1~9 <br><b><font color='red'>当ECS实例类型为PrePaid有效</b></font>
+    Label:
+      en: Period
+      zh-cn: 购买资源时长
+    Default: 1
+    AllowedValues:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+    AssociationProperty: PayPeriod
+    AssociationPropertyMetadata:
+      Visible:
+        Condition:
+          Fn::Not:
+            Fn::Equals:
+              - ${PayType}
+              - PostPaid
+  ZoneId:
+    Type: String
+    AssociationProperty: ALIYUN::ECS::Instance::ZoneId
+    Label:
+      en: VSwitch Availability Zone
+      zh-cn: 交换机可用区
+  VpcCidrBlock:
+    Type: String
+    Label:
+      en: VPC CIDR IPv4 Block
+      zh-cn: 专有网络IPv4网段
+    Description:
+      zh-cn: VPC的ip地址段范围，<br>您可以使用以下的ip地址段或其子网:<br><font color='green'>[10.0.0.0/8]</font><br><font color='green'>[172.16.0.0/12]</font><br><font color='green'>[192.168.0.0/16]</font>
+      en: 'The ip address range of the VPC in the CidrBlock form; <br>You can use the following ip address ranges and their subnets: <br><font color=''green''>[10.0.0.0/8]</font><br><font color=''green''>[172.16.0.0/12]</font><br><font color=''green''>[192.168.0.0/16]</font>'
+    Default: 192.168.0.0/16
+    AssociationProperty: ALIYUN::VPC::VPC::CidrBlock
+  # 新建ack所在的交换机的网段
+  VSwitchCidrBlock:
+    Type: String
+    Label:
+      en: VSwitch CIDR Block
+      zh-cn: 交换机子网网段
+    Description:
+      zh-cn: 必须属于VPC的子网段。
+      en: Must belong to the subnet segment of VPC.
+    Default: 192.168.1.0/24
+    AssociationProperty: ALIYUN::VPC::VSwitch::CidrBlock
+    AssociationPropertyMetadata:
+      VpcCidrBlock: VpcCidrBlock
+  EcsInstanceType:
+    Type: String
+    Label:
+      en: Instance Type
+      zh-cn: 实例类型
+    AssociationProperty: ALIYUN::ECS::Instance::InstanceType
+    AssociationPropertyMetadata:
+      InstanceChargeType: ${PayType}
+  SystemDiskCategory:
+    Type: String
+    AllowedValues:
+      - cloud_efficiency
+      - cloud_ssd
+      - cloud
+      - cloud_essd
+    Label:
+      en: System Disk Category
+      zh-cn: 系统盘类型
+    AssociationPropertyMetadata:
+      LocaleKey: DiskCategory
+  SystemDiskSize:
+    Default: 40
+    MinValue: 40
+    Type: Number
+    Label:
+      zh-cn: 系统盘空间 (GB)
+      en: System Disk Space (GB)
+  InstancePassword:
+    NoEcho: true
+    Type: String
+    Description:
+      en: Server login password, Length 8-30, must contain three(Capital letters, lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;<>,.?/ Special symbol in)
+      zh-cn: 服务器登录密码,长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;<>,.?/ 中的特殊符号）
+    Label:
+      en: Instance Password
+      zh-cn: 实例密码
+    ConstraintDescription:
+      en: Length 8-30, must contain three(Capital letters, lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;<>,.?/ Special symbol in)
+      zh-cn: 长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;<>,.?/ 中的特殊符号）
+    AssociationProperty: ALIYUN::ECS::Instance::Password
+    AllowedPattern: '^[a-zA-Z0-9-\(\)\`\~\!\@\#\$\%\^\&\*\_\-\+\=\|\{\}\[\]\:\;\<\>\,\.\?\/]*$'
+    MinLength: 8
+    MaxLength: 30
+# 资源配置
+Resources:
+  # 新建vpc
+  EcsVpc:
+    Type: ALIYUN::ECS::VPC
+    Properties:
+      VpcName:
+        Ref: ALIYUN::StackName
+      CidrBlock:
+        Ref: VpcCidrBlock
+  # 新建vswitch
+  EcsVSwitch:
+    Type: ALIYUN::ECS::VSwitch
+    Properties:
+      VSwitchName:
+        Ref: ALIYUN::StackName
+      VpcId:
+        Ref: EcsVpc
+      ZoneId:
+        Ref: ZoneId
+      CidrBlock:
+        Ref: VSwitchCidrBlock
+  EcsSecurityGroup:
+    Type: ALIYUN::ECS::SecurityGroup
+    Properties:
+      SecurityGroupName:
+        Ref: ALIYUN::StackName
+      VpcId:
+        Ref: EcsVpc
+      SecurityGroupIngress:
+        - PortRange: 8360/8360
+          Priority: 1
+          IpProtocol: tcp
+          SourceCidrIp: 0.0.0.0/0
+          NicType: internet
+  InstanceGroup:
+    Type: ALIYUN::ECS::InstanceGroup
+    Properties:
+      # 实例名
+      InstanceName:
+        Fn::Join:
+          - '-'
+          - - Ref: ALIYUN::StackName
+            - '[1,4]'
+      IoOptimized: optimized
+      # 付费类型
+      InstanceChargeType:
+        Ref: PayType
+      PeriodUnit:
+        Ref: PayPeriodUnit
+      Period:
+        Ref: PayPeriod
+      # 网络配置
+      ZoneId:
+        Ref: ZoneId
+      VpcId:
+        Ref: EcsVpc
+      VSwitchId:
+        Ref: EcsVSwitch
+      SecurityGroupId:
+        Ref: EcsSecurityGroup
+      # 磁盘类型和大小
+      SystemDiskCategory:
+        Ref: SystemDiskCategory
+      SystemDiskSize:
+        Ref: SystemDiskSize
+      MaxAmount: 1
+      # 镜像
+      ImageId: centos_7_9_x64_20G_alibase_20240403.vhd
+      # 实例类型
+      InstanceType:
+        Ref: EcsInstanceType
+      Password:
+        Ref: InstancePassword
+      AllocatePublicIP: true
+      # 启动脚本
+      UserData: -|
+      #!/bin/bash
+  # 到机器上执行命令
+  WaitCondition:
+    Type: ALIYUN::ROS::WaitCondition
+    Properties:
+      Count: 1
+      Handle:
+        Ref: WaitConditionHandle
+      Timeout: 3000
+  WaitConditionHandle:
+    Type: ALIYUN::ROS::WaitConditionHandle
+  InstanceRunCommand:
+    Type: ALIYUN::ECS::RunCommand
+    Properties:
+      Sync: true
+      CommandContent:
+        Fn::Sub:
+          - |
+            yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+            yum makecache fast
+            yum -y install docker-ce jq
+            mkdir -p /etc/docker
+            tee /etc/docker/daemon.json <<-'EOF'
+            {
+                "registry-mirrors": [
+                    "https://0vmzj3q6.mirror.aliyuncs.com",
+                    "https://docker.m.daocloud.io",
+                    "https://mirror.baidubce.com",
+                    "https://dockerproxy.com",
+                    "https://mirror.iscas.ac.cn",
+                    "https://huecker.io",
+                    "https://dockerhub.timeweb.cloud",
+                    "https://noohub.ru",
+                    "https://vlgh0kqj.mirror.aliyuncs.com"
+                ]
+            }
+            EOF
+            systemctl enable docker
+            systemctl start docker
+            sleep 10
+            
+            mkdir -p /home/admin/application
+            cat >/home/admin/application/docker-compose.yaml<<EOF
+            version: '3'
+            services:
+              waline:
+                container_name: waline
+                image: lizheming/waline:latest
+                restart: always
+                ports:
+                  - 8360:8360
+                volumes:
+                  - ${PWD}/data:/app/data
+                environment:
+                  TZ: 'Asia/Shanghai'
+                  SQLITE_PATH: '/app/data'
+                  JWT_TOKEN: 'fdsfdsvaerewrew'
+                  SITE_NAME: 'waline-computenest'
+                  SITE_URL: 'https://example.com'
+                  SECURE_DOMAINS: 'example.com'
+                  AUTHOR_EMAIL: 'mail@example.com'
+            
+            EOF
+            
+            cat > /etc/systemd/system/docker-compose-app.service <<EOF
+            [Unit]
+            Description=Docker Compose Application Service
+            Requires=docker.service
+            After=docker.service
+            
+            [Service]
+            Type=oneshot
+            RemainAfterExit=yes
+            WorkingDirectory=/home/admin/application
+            ExecStart=/usr/bin/docker compose up -d
+            ExecStop=/usr/bin/docker compose down
+            TimeoutStartSec=0
+            
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+            
+            # 在Docker Compose启动前执行此命令片段，命令中可以引用参数
+            echo "before docker compose starts"
+            
+            systemctl start docker-compose-app
+            sleep 10
+            # 在Docker Compose启动后执行此命令片段，命令中可以引用参数
+            echo "after docker compose starts"
+            
+            
+            ARGUS_VERSION=3.5.7 /bin/bash -c "$(curl -sS https://cms-agent-${RegionId}.oss-${RegionId}-internal.aliyuncs.com/Argus/agent_install_ecs-1.7.sh)" >> /root/install_cms_agent.log 2>&1
+          - RegionId:
+              Ref: ALIYUN::Region
+      Type: RunShellScript
+      InstanceIds:
+        'Fn::GetAtt':
+          - InstanceGroup
+          - InstanceIds
+      Timeout: '300'
+Outputs:
+  # 将数据库连接地址显示在控制台
+  ConnectionAddress:
+    Value:
+      Fn::Sub:
+        - http://${PublicIp}:8360
+        - PublicIp:
+            Fn::Select:
+              - 0
+              - Fn::GetAtt:
+                  - InstanceGroup
+                  - PublicIps
+Metadata:
+  ALIYUN::ROS::Interface:
+    # 分组信息
+    ParameterGroups:
+      - Parameters:
+          - PayType
+          - PayPeriodUnit
+          - PayPeriod
+        Label:
+          default:
+            en: PayType Configuration
+            zh-cn: 付费类型配置
+      - Parameters:
+          - EcsInstanceType
+          - SystemDiskCategory
+          - SystemDiskSize
+          - InstancePassword
+        Label:
+          default:
+            en: Instance
+            zh-cn: ECS实例配置
+      - Parameters:
+          - ZoneId
+        Label:
+          default:
+            zh-cn: 可用区配置
+            en: Zone Configuration
+      - Parameters:
+          - VpcCidrBlock
+          - VSwitchCidrBlock
+        Label:
+          default:
+            zh-cn: 基础资源配置
+            en: Infrastructure Configuration
