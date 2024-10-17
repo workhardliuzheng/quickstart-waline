@@ -74,7 +74,7 @@ Parameters:
       zh-cn: 现有虚拟专有网络的实例ID
     Label:
       en: VPC ID
-      zh-cn: 专有网络VPC实例ID
+      zh-cn: VPC ID
   VSwitchId:
     AssociationProperty: ALIYUN::ECS::VSwitch::VSwitchId
     AssociationPropertyMetadata:
@@ -86,7 +86,7 @@ Parameters:
       zh-cn: 现有业务网络交换机的实例ID
     Label:
       en: VSwitch ID
-      zh-cn: 交换机实例ID
+      zh-cn: 交换机ID
   EcsInstanceType:
     Type: String
     Label:
@@ -107,13 +107,6 @@ Parameters:
       zh-cn: 系统盘类型
     AssociationPropertyMetadata:
       LocaleKey: DiskCategory
-  SystemDiskSize:
-    Default: 40
-    MinValue: 40
-    Type: Number
-    Label:
-      zh-cn: 系统盘空间 (GB)
-      en: System Disk Space (GB)
   InstancePassword:
     NoEcho: true
     Type: String
@@ -174,11 +167,10 @@ Resources:
       # 磁盘类型和大小
       SystemDiskCategory:
         Ref: SystemDiskCategory
-      SystemDiskSize:
-        Ref: SystemDiskSize
+      SystemDiskSize: 40
       MaxAmount: 1
       # 镜像
-      ImageId: centos_7_9_x64_20G_alibase_20240403.vhd
+      ImageId: aliyun_3_x64_20G_alibase_20240528.vhd
       # 实例类型
       InstanceType:
         Ref: EcsInstanceType
@@ -196,49 +188,6 @@ Resources:
       CommandContent:
         Fn::Sub:
           - |
-
-            yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-            yum makecache fast
-            yum -y install docker-ce jq
-            mkdir -p /etc/docker
-            tee /etc/docker/daemon.json <<-'EOF'
-            {
-                "registry-mirrors": [
-                    "https://docker.m.daocloud.io",
-                    "https://mirror.iscas.ac.cn"
-                ]
-            }
-            EOF
-            systemctl enable docker
-            systemctl start docker
-            sleep 10
-            
-            mkdir -p /root/data
-            cd /root/data
-            wget '{{ computenest::file::waline }}'
-            
-            mkdir -p /home/admin/application
-            cat >/home/admin/application/docker-compose.yaml<<EOF
-            version: '3'
-            services:
-              waline:
-                container_name: waline
-                image: compute-nest-registry.cn-hangzhou.cr.aliyuncs.com/public/waline:waline-1
-                restart: always
-                ports:
-                  - 8360:8360
-                volumes:
-                  - /root/data:/app/data
-                environment:
-                  TZ: 'Asia/Shanghai'
-                  SQLITE_PATH: '/app/data'
-                  JWT_TOKEN: 'fdsfdsvaerewrew'
-                  SITE_NAME: 'waline-computenest'
-                  SITE_URL: 'https://example.com'
-                  SECURE_DOMAINS: 'example.com'
-                  AUTHOR_EMAIL: 'mail@example.com'
-            
-            EOF
             
             cat > /etc/systemd/system/docker-compose-app.service <<EOF
             [Unit]
@@ -258,14 +207,7 @@ Resources:
             WantedBy=multi-user.target
             EOF
             
-            # 在Docker Compose启动前执行此命令片段，命令中可以引用参数
-            echo "before docker compose starts"
-            
             systemctl start docker-compose-app
-            sleep 10
-            # 在Docker Compose启动后执行此命令片段，命令中可以引用参数
-            echo "after docker compose starts"
-            
             
             ARGUS_VERSION=3.5.7 /bin/bash -c "$(curl -sS https://cms-agent-${RegionId}.oss-${RegionId}-internal.aliyuncs.com/Argus/agent_install_ecs-1.7.sh)" >> /root/install_cms_agent.log 2>&1
           - RegionId:
@@ -279,6 +221,9 @@ Resources:
 Outputs:
   # 将数据库连接地址显示在控制台
   ConnectionAddress:
+    Label:
+      zh-cn: 体验地址
+      en: Experience Ip Address
     Value:
       Fn::Sub:
         - http://${PublicIp}:8360
@@ -303,11 +248,10 @@ Metadata:
       - Parameters:
           - EcsInstanceType
           - SystemDiskCategory
-          - SystemDiskSize
           - InstancePassword
         Label:
           default:
-            en: Instance
+            en: ECS Instance Configuration
             zh-cn: ECS实例配置
       - Parameters:
           - ZoneId
