@@ -2,13 +2,136 @@ Service:
   RegionId: cn-hangzhou
   DeployType: ros
   DeployMetadata:
+    SupplierDeployMetadata:
+      ArtifactRelation:
+        'aliyun_3_x64_20G_alibase_20240528.vhd':
+          ArtifactId: ${Artifact.EcsImage.ArtifactId}
+          ArtifactVersion: ${Artifact.EcsImage.ArtifactVersion}
     TemplateConfigs:
-      - Name: 单机版
+      - Name: SingleNode
         Url: 'ros_templates/template.yaml'
         AllowedRegions:
+          - cn-qingdao
+          - cn-beijing
+          - cn-zhangjiakou
+          - cn-huhehaote
+          - cn-wulanchabu
+          - cn-hangzhou
+          - cn-shanghai
+          - cn-nanjing
+          - cn-shenzhen
+          - cn-heyuan
+          - cn-guangzhou
+          - cn-fuzhou
+          - cn-wuhan-lr
+          - cn-chengdu
           - cn-hongkong
+          - ap-northeast-1
+          - ap-northeast-2
+          - ap-southeast-1
+          - ap-southeast-3
+          - ap-southeast-6
+          - ap-southeast-5
+          - ap-southeast-7
+          - us-east-1
+          - us-west-1
+          - eu-west-1
+          - eu-central-1
+          - me-east-1
   ServiceType: private
   ServiceInfo:
     Locale: zh-CN
-    ShortDescription: docker compose deploy
+    ShortDescription: 'waline 一款简洁、安全的评论系统。'
     Image: 'resources/icons/service_logo.png'
+Artifact:
+  EcsImage:
+    ArtifactType: EcsImage
+    ArtifactName: waline_image
+    ArtifactProperty:
+      RegionId: ${ImageBuilder.EcsImage.RegionId}
+      ImageId: ${ImageBuilder.EcsImage.SourceImageId}
+    SupportRegionIds:
+      - cn-qingdao
+      - cn-beijing
+      - cn-zhangjiakou
+      - cn-huhehaote
+      - cn-wulanchabu
+      - cn-hangzhou
+      - cn-shanghai
+      - cn-nanjing
+      - cn-shenzhen
+      - cn-heyuan
+      - cn-guangzhou
+      - cn-fuzhou
+      - cn-wuhan-lr
+      - cn-chengdu
+      - cn-hongkong
+      - ap-northeast-1
+      - ap-northeast-2
+      - ap-southeast-1
+      - ap-southeast-3
+      - ap-southeast-6
+      - ap-southeast-5
+      - ap-southeast-7
+      - us-east-1
+      - us-west-1
+      - eu-west-1
+      - eu-central-1
+      - me-east-1
+ImageBuilder:
+  EcsImage:
+    RegionId: ap-southeast-1
+    SourceImageId: aliyun_3_x64_20G_alibase_20240528.vhd
+    InstanceType: ecs.c6.large
+    InternetMaxBandwidthOut: 10
+    CommandType: RunShellScript
+    Timeout: 10800
+    CommandContent: |-
+      #!/bin/bash
+      yum -y update
+      yum -y install git
+      yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+      yum makecache
+      yum -y install docker-ce jq
+      mkdir -p /etc/docker
+      tee /etc/docker/daemon.json <<-'EOF'
+      {
+        "registry-mirrors": [
+          "https://docker.m.daocloud.io",
+          "https://mirror.iscas.ac.cn"
+        ]
+      }
+      EOF
+      systemctl daemon-reload
+      systemctl enable docker
+      systemctl start docker
+      sleep 10
+      
+      cd /root
+      git clone https://github.com/walinejs/waline.git
+      
+      mkdir -p /home/admin/application
+      cat >/home/admin/application/docker-compose.yaml<<EOF
+      version: '3'
+      services:
+        waline:
+          container_name: waline
+          image: lizheming/waline:latest
+          restart: always
+          ports:
+            - 8360:8360
+          volumes:
+            - /root/waline/assets:/app/data
+          environment:
+            TZ: 'Asia/Shanghai'
+            SQLITE_PATH: '/app/data'
+            JWT_TOKEN: 'fdsfdsvaerewrew'
+            SITE_NAME: 'waline-computenest'
+            SITE_URL: 'https://example.com'
+            SECURE_DOMAINS: 'example.com'
+            AUTHOR_EMAIL: 'mail@example.com'
+      EOF
+      
+      cd /home/admin/application
+      docker compose build
+      docker pull lizheming/waline:latest
