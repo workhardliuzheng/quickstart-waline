@@ -45,8 +45,8 @@ Waline 一款简洁、安全的评论系统。
 |                                                     | <font style="color:rgb(51, 51, 51);">交换机ID</font>  | <font style="color:rgb(51, 51, 51);">资源所在交换机</font>                                       |
 
 
-## 部署流程
-1. 访问计算巢Waline[部署链接](https://computenest.console.aliyun.com/service/instance/create/default?type=user&ServiceName=Waline体验版)，按提示填写部署参数
+
+1. 访问计算巢Waline[部署链接](https://computenest.console.aliyun.com/service/instance/create/default?type=user&ServiceName=Waline社区版)，按提示填写部署参数
 2. 选择付费类型
    ![](./images/pay_type_config.png)
 3. 填写实例参数
