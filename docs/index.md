@@ -51,6 +51,6 @@ Waline 一款简洁、安全的评论系统。
    ![](./images/pay_type_config.png)
 3. 填写实例参数
    ![](./images/resource_config.png)
-4. 填写可用区和网络参数并点击“下一步![](./images/zone_config.png)
+4. 填写可用区和网络参数并点击”下一步“![](./images/zone_config.png)
 5. 确认部署参数并查看预估价格后，点击立即创建，等待服务实例部署完成
 6. 服务实例部署完成后，点击实例ID进入到详情界面，点击![](./images/how_to_use.png)
