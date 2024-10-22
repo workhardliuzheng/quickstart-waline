@@ -69,7 +69,7 @@
     <li><font style="color:rgb(51, 51, 51);"> Internet bandwidth </font></li>
 </ul>
 
-<p> This service requires ECS instance can access WeChat server from public network. </p>
+<p> This service requires ECS instance can access Waline server from public network. </p>
 
 <h2> Deployment Architecture </h2>
 
@@ -142,13 +142,13 @@
 <h2> Deployment process </h2>
 
 <ol>
-    <li> visit the compute nest ChatGPT-on-WeChat<a
+    <li> visit the compute nest Waline<a
             href="https://computenest.console.aliyun.com/service/instance/create/ap-southeast-1?type=user&ServiceName=Waline Community Edition">
         deployment link </a> and fill in the deployment parameters as prompted
     </li>
     <li> Select payment type
         <img src="./images/pay_type_config_en.png" alt=""/></li>
-    <li> enter instance parameters
+    <li> Enter instance parameters
         <img src="./images/resource_config_en.png" alt=""/></li>
     <li> Fill in the zone and network parameters and click Next: Confirm Order <img src="./images/zone_config_en.png"
                                                                                     alt=""/></li>
