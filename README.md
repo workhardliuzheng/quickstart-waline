@@ -1,1 +1,2 @@
-# quickstart-waline
+Waline QuickStart
+Waline 是一款简洁、安全的评论系统。 本项目从Waline GitHub项目创建一个计算巢私有化部署服务。使用计算巢服务，用户可以快捷部署Waline到阿里云上。
