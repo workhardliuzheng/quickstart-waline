@@ -10,6 +10,7 @@ Service:
     TemplateConfigs:
       - Name: SingleNode
         Url: 'ros_templates/template.yaml'
+        ArchitectureDiagramUrl: '/docs/images/architecture_ecs_single.png'
         AllowedRegions:
           - cn-qingdao
           - cn-beijing
