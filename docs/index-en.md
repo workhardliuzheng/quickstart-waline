@@ -153,6 +153,7 @@
     <li> Fill in the zone and network parameters and click Next: Confirm Order <img src="./images/zone_config_en.png"
                                                                                     alt=""/></li>
     <li> Confirm all parameters and estimate price, click Create Now and wait for the service instance deployment to complete</li>
-    <li> After the service instance is deployed, click the instance ID to go to the details page and click: <img src="./images/how_to_use_en.png" alt=""/>
+    <li> After the service instance is deployed, click the instance ID to go to the details page and click: <img
+        src="./images/how_to_use_en.png" alt=""/>
     </li>
 </ol>
