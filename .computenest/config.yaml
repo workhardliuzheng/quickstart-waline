@@ -1,6 +1,13 @@
 Service:
   RegionId: cn-hangzhou
   DeployType: ros
+  OperationMetadata:
+    StatusOperationConfigs:
+      - TemplateName: SingleNode
+        SupportOperations:
+          - Start
+          - Stop
+    SupportBackup: true
   DeployMetadata:
     SupplierDeployMetadata:
       ArtifactRelation:
@@ -10,7 +17,7 @@ Service:
     TemplateConfigs:
       - Name: SingleNode
         Url: 'ros_templates/template.yaml'
-        ArchitectureDiagramUrl: '/docs/images/architecture_ecs_single.png'
+        ArchitectureDiagramUrl: 'docs/images/architecture_ecs_single.png'
         AllowedRegions:
           - cn-qingdao
           - cn-beijing
