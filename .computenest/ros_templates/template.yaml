@@ -206,7 +206,8 @@ Resources:
             [Install]
             WantedBy=multi-user.target
             EOF
-            
+
+            systemctl enable docker-compose-app
             systemctl start docker-compose-app
             
             ARGUS_VERSION=3.5.7 /bin/bash -c "$(curl -sS https://cms-agent-${RegionId}.oss-${RegionId}-internal.aliyuncs.com/Argus/agent_install_ecs-1.7.sh)" >> /root/install_cms_agent.log 2>&1
