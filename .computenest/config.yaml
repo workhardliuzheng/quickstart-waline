@@ -138,6 +138,7 @@ ImageBuilder:
             SITE_URL: 'https://example.com'
             SECURE_DOMAINS: 'example.com'
             AUTHOR_EMAIL: 'mail@example.com'
+            AKISMET_KEY: false
       EOF
       
       cd /home/admin/application
